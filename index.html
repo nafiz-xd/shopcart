@@ -23,7 +23,7 @@
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px; margin-top:14px; }
   .card { background:#221a3d; border:1px solid #3b2f63; border-radius:14px; padding:18px; position:relative; transition:transform .15s, border-color .15s; }
   .card:hover { transform:translateY(-4px); border-color:#7c3aed; }
-  .card .emoji { font-size:52px; text-align:center; margin:6px 0 10px; }
+  .card .pimg { width:100%; height:175px; object-fit:cover; border-radius:10px; margin-bottom:12px; display:block; background:#17122b; }
   .card h3 { font-size:16.5px; margin-bottom:4px; }
   .card .cat { color:#a78bfa; font-size:12.5px; }
   .card .price { font-size:19px; font-weight:800; margin:8px 0 2px; }
@@ -40,7 +40,7 @@
   .drawer.open { right:0; }
   .drawer h2 { font-size:20px; margin-bottom:14px; }
   .citem { display:flex; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid #3b2f63; }
-  .citem .e { font-size:30px; }
+  .citem .e { width:46px; height:46px; object-fit:cover; border-radius:8px; }
   .citem .info { flex:1; }
   .citem .info .n { font-weight:600; font-size:14.5px; }
   .citem .info .p { color:#a78bfa; font-size:13px; }
@@ -121,18 +121,18 @@
 
 <script>
   const PRODUCTS = [
-    { id: 1, name: 'Wireless Headphones', cat: 'Electronics', price: 2450, old: 3200, rating: 4.8, sold: 320, emoji: '🎧' },
-    { id: 2, name: 'Smart Watch', cat: 'Electronics', price: 3850, old: 4500, rating: 4.6, sold: 210, emoji: '⌚' },
-    { id: 3, name: 'Bluetooth Speaker', cat: 'Electronics', price: 1750, old: 2200, rating: 4.5, sold: 180, emoji: '🔊' },
-    { id: 4, name: 'USB-C Fast Charger', cat: 'Electronics', price: 650, old: 900, rating: 4.4, sold: 540, emoji: '🔌' },
-    { id: 5, name: 'Cotton T-Shirt', cat: 'Fashion', price: 550, old: 800, rating: 4.7, sold: 890, emoji: '👕' },
-    { id: 6, name: 'Denim Jacket', cat: 'Fashion', price: 2150, old: 2800, rating: 4.6, sold: 130, emoji: '🧥' },
-    { id: 7, name: 'Running Shoes', cat: 'Fashion', price: 2950, old: 3600, rating: 4.9, sold: 260, emoji: '👟' },
-    { id: 8, name: 'Sunglasses', cat: 'Fashion', price: 850, old: 1200, rating: 4.3, sold: 410, emoji: '🕶️' },
-    { id: 9, name: 'Basmati Rice 5kg', cat: 'Grocery', price: 720, old: 850, rating: 4.8, sold: 1200, emoji: '🍚' },
-    { id: 10, name: 'Organic Honey 500g', cat: 'Grocery', price: 480, old: 600, rating: 4.9, sold: 760, emoji: '🍯' },
-    { id: 11, name: 'Green Tea 100 bags', cat: 'Grocery', price: 350, old: 450, rating: 4.5, sold: 980, emoji: '🍵' },
-    { id: 12, name: 'Backpack 25L', cat: 'Fashion', price: 1650, old: 2100, rating: 4.7, sold: 340, emoji: '🎒' }
+    { id: 1, name: 'Wireless Headphones', cat: 'Electronics', price: 2450, old: 3200, rating: 4.8, sold: 320, img: 'images/p1.jpg' },
+    { id: 2, name: 'Smart Watch', cat: 'Electronics', price: 3850, old: 4500, rating: 4.6, sold: 210, img: 'images/p2.jpg' },
+    { id: 3, name: 'Bluetooth Speaker', cat: 'Electronics', price: 1750, old: 2200, rating: 4.5, sold: 180, img: 'images/p3.jpg' },
+    { id: 4, name: 'USB-C Fast Charger', cat: 'Electronics', price: 650, old: 900, rating: 4.4, sold: 540, img: 'images/p4.jpg' },
+    { id: 5, name: 'Cotton T-Shirt', cat: 'Fashion', price: 550, old: 800, rating: 4.7, sold: 890, img: 'images/p5.jpg' },
+    { id: 6, name: 'Denim Jacket', cat: 'Fashion', price: 2150, old: 2800, rating: 4.6, sold: 130, img: 'images/p6.jpg' },
+    { id: 7, name: 'Running Shoes', cat: 'Fashion', price: 2950, old: 3600, rating: 4.9, sold: 260, img: 'images/p7.jpg' },
+    { id: 8, name: 'Sunglasses', cat: 'Fashion', price: 850, old: 1200, rating: 4.3, sold: 410, img: 'images/p8.jpg' },
+    { id: 9, name: 'Basmati Rice 5kg', cat: 'Grocery', price: 720, old: 850, rating: 4.8, sold: 1200, img: 'images/p9.jpg' },
+    { id: 10, name: 'Organic Honey 500g', cat: 'Grocery', price: 480, old: 600, rating: 4.9, sold: 760, img: 'images/p10.jpg' },
+    { id: 11, name: 'Green Tea 100 bags', cat: 'Grocery', price: 350, old: 450, rating: 4.5, sold: 980, img: 'images/p11.jpg' },
+    { id: 12, name: 'Backpack 25L', cat: 'Fashion', price: 1650, old: 2100, rating: 4.7, sold: 340, img: 'images/p12.jpg' }
   ];
   const CATS = ['All', 'Electronics', 'Fashion', 'Grocery'];
   let activeCat = 'All';
@@ -198,7 +198,7 @@
     document.getElementById('grid').innerHTML = list.length ? list.map(p => `
       <div class="card">
         <button class="wish ${wishlist.includes(p.id) ? 'on' : ''}" onclick="toggleWish(${p.id})" title="Wishlist">❤️</button>
-        <div class="emoji">${p.emoji}</div>
+        <img class="pimg" src="${p.img}" alt="${p.name}" loading="lazy">
         <h3>${p.name}</h3>
         <div class="cat">${p.cat} · ${p.sold} sold</div>
         <div class="price">${fmt(p.price)}<s>${fmt(p.old)}</s></div>
@@ -212,7 +212,7 @@
     const entries = Object.entries(cart);
     box.innerHTML = entries.length ? entries.map(([id, q]) => {
       const p = PRODUCTS.find(x => x.id == id);
-      return `<div class="citem"><div class="e">${p.emoji}</div>
+      return `<div class="citem"><img class="e" src="${p.img}" alt="">
         <div class="info"><div class="n">${p.name}</div><div class="p">${fmt(p.price)} × ${q} = ${fmt(p.price * q)}</div></div>
         <div class="qty"><button onclick="changeQty(${p.id},-1)">−</button><span>${q}</span><button onclick="changeQty(${p.id},1)">+</button></div></div>`;
     }).join('') : '<p style="color:#a78bfa;padding:16px 0">Your cart is empty.</p>';
