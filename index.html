@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopCart — Online Shopping Demo</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:#17122b; color:#ede9fe; min-height:100vh; padding-bottom:60px; }
+  header { position:sticky; top:0; background:rgba(23,18,43,.95); border-bottom:1px solid #3b2f63; z-index:20; padding:12px 0; }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 16px; }
+  .nav { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .logo { font-size:23px; font-weight:800; }
+  .logo span { color:#a78bfa; }
+  .search { flex:1; min-width:180px; }
+  .search input { width:100%; padding:11px 14px; border-radius:10px; border:1px solid #3b2f63; background:#221a3d; color:#ede9fe; font-size:15px; }
+  .cartbtn { background:#7c3aed; color:#fff; border:none; padding:11px 18px; border-radius:10px; font-weight:800; cursor:pointer; font-size:15px; }
+  .cartbtn b { background:#fff; color:#7c3aed; border-radius:999px; padding:0 7px; margin-left:5px; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; margin:20px 0 6px; align-items:center; }
+  .chip { padding:8px 15px; border-radius:999px; border:1px solid #3b2f63; background:#221a3d; color:#c4b5fd; cursor:pointer; font-weight:700; font-size:13.5px; }
+  .chip.active { background:#7c3aed; color:#fff; border-color:#7c3aed; }
+  select { padding:9px 12px; border-radius:10px; border:1px solid #3b2f63; background:#221a3d; color:#ede9fe; font-size:14px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px; margin-top:14px; }
+  .card { background:#221a3d; border:1px solid #3b2f63; border-radius:14px; padding:18px; position:relative; transition:transform .15s, border-color .15s; }
+  .card:hover { transform:translateY(-4px); border-color:#7c3aed; }
+  .card .emoji { font-size:52px; text-align:center; margin:6px 0 10px; }
+  .card h3 { font-size:16.5px; margin-bottom:4px; }
+  .card .cat { color:#a78bfa; font-size:12.5px; }
+  .card .price { font-size:19px; font-weight:800; margin:8px 0 2px; }
+  .card .price s { color:#8b7bb8; font-size:13.5px; font-weight:400; margin-left:6px; }
+  .card .rating { color:#fbbf24; font-size:13px; }
+  .addbtn { width:100%; margin-top:12px; padding:10px; background:#7c3aed; color:#fff; border:none; border-radius:9px; font-weight:700; cursor:pointer; }
+  .wish { position:absolute; top:12px; right:12px; background:none; border:none; font-size:20px; cursor:pointer; filter:grayscale(1); }
+  .wish.on { filter:none; }
+  .empty { text-align:center; color:#a78bfa; padding:44px 0; grid-column:1/-1; }
+  /* drawer */
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; z-index:40; }
+  .overlay.open { display:block; }
+  .drawer { position:fixed; top:0; right:-420px; width:400px; max-width:94vw; height:100%; background:#1d1533; border-left:1px solid #3b2f63; z-index:50; transition:right .3s; padding:20px; overflow-y:auto; }
+  .drawer.open { right:0; }
+  .drawer h2 { font-size:20px; margin-bottom:14px; }
+  .citem { display:flex; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid #3b2f63; }
+  .citem .e { font-size:30px; }
+  .citem .info { flex:1; }
+  .citem .info .n { font-weight:600; font-size:14.5px; }
+  .citem .info .p { color:#a78bfa; font-size:13px; }
+  .qty { display:flex; align-items:center; gap:7px; }
+  .qty button { width:26px; height:26px; border-radius:7px; border:1px solid #3b2f63; background:#221a3d; color:#ede9fe; cursor:pointer; font-weight:800; }
+  .sumrow { display:flex; justify-content:space-between; padding:6px 0; font-size:14.5px; }
+  .sumrow.total { border-top:2px solid #7c3aed; margin-top:8px; padding-top:12px; font-size:17px; font-weight:800; }
+  .promo { display:flex; gap:8px; margin:12px 0; }
+  .promo input { flex:1; padding:10px; border-radius:9px; border:1px solid #3b2f63; background:#221a3d; color:#ede9fe; }
+  .promo button { padding:10px 16px; background:#3b2f63; color:#ede9fe; border:none; border-radius:9px; font-weight:700; cursor:pointer; }
+  .checkout { width:100%; padding:13px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:16px; cursor:pointer; margin-top:10px; }
+  .free { color:#34d399; font-weight:700; }
+  .success { text-align:center; padding:26px 0; }
+  .success .big { font-size:56px; }
+  input.f { width:100%; padding:11px; border-radius:9px; border:1px solid #3b2f63; background:#221a3d; color:#ede9fe; margin-bottom:10px; font-size:14.5px; }
+  .hint { color:#a78bfa; font-size:12.5px; text-align:center; margin-top:16px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="logo">🛒 Shop<span>Cart</span></div>
+    <div class="search"><input id="search" type="text" placeholder="Search products… e.g. headphones, shirt, rice" oninput="render()"></div>
+    <button class="cartbtn" onclick="openCart()">Cart <b id="cartCount">0</b></button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls" id="catChips"></div>
+  <div class="controls">
+    <select id="sort" onchange="render()">
+      <option value="popular">Sort: Most popular</option>
+      <option value="low">Price: Low → High</option>
+      <option value="high">Price: High → Low</option>
+      <option value="rating">Top rated</option>
+    </select>
+    <label style="font-size:14px;color:#c4b5fd"><input type="checkbox" id="wishOnly" onchange="render()"> ❤️ Wishlist only</label>
+    <span id="resultCount" style="color:#a78bfa;font-size:13.5px"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p class="hint">Demo store — no real orders are placed. Try the promo code <b>NAFIZ10</b> for 10% off · Free delivery on orders over ৳1,000</p>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<aside class="drawer" id="drawer">
+  <div id="cartView">
+    <h2>Your Cart</h2>
+    <div id="cartItems"></div>
+    <div class="promo">
+      <input id="promo" type="text" placeholder="Promo code (try NAFIZ10)">
+      <button onclick="applyPromo()">Apply</button>
+    </div>
+    <div id="promoMsg" style="font-size:13px;margin-bottom:6px"></div>
+    <div class="sumrow"><span>Subtotal</span><span id="subTotal">৳0</span></div>
+    <div class="sumrow"><span>Discount</span><span id="discount">−৳0</span></div>
+    <div class="sumrow"><span>Delivery</span><span id="delivery">৳60</span></div>
+    <div class="sumrow total"><span>Total</span><span id="grandTotal">৳0</span></div>
+    <button class="checkout" onclick="showCheckout()">Checkout →</button>
+  </div>
+  <div id="checkoutView" style="display:none">
+    <h2>Checkout</h2>
+    <input class="f" id="coName" placeholder="Your name">
+    <input class="f" id="coPhone" placeholder="Phone number">
+    <input class="f" id="coAddress" placeholder="Delivery address">
+    <select class="f" id="coPay" style="width:100%">
+      <option>Cash on Delivery</option><option>bKash</option><option>Nagad</option>
+    </select>
+    <button class="checkout" onclick="placeOrder()">Place Order</button>
+    <button class="checkout" style="background:#3b2f63" onclick="backToCart()">← Back to cart</button>
+  </div>
+  <div id="successView" style="display:none" class="success">
+    <div class="big">🎉</div>
+    <h2 style="margin:10px 0">Order placed!</h2>
+    <p id="orderInfo" style="color:#c4b5fd"></p>
+    <button class="checkout" onclick="closeCart()">Continue Shopping</button>
+  </div>
+</aside>
+
+<script>
+  const PRODUCTS = [
+    { id: 1, name: 'Wireless Headphones', cat: 'Electronics', price: 2450, old: 3200, rating: 4.8, sold: 320, emoji: '🎧' },
+    { id: 2, name: 'Smart Watch', cat: 'Electronics', price: 3850, old: 4500, rating: 4.6, sold: 210, emoji: '⌚' },
+    { id: 3, name: 'Bluetooth Speaker', cat: 'Electronics', price: 1750, old: 2200, rating: 4.5, sold: 180, emoji: '🔊' },
+    { id: 4, name: 'USB-C Fast Charger', cat: 'Electronics', price: 650, old: 900, rating: 4.4, sold: 540, emoji: '🔌' },
+    { id: 5, name: 'Cotton T-Shirt', cat: 'Fashion', price: 550, old: 800, rating: 4.7, sold: 890, emoji: '👕' },
+    { id: 6, name: 'Denim Jacket', cat: 'Fashion', price: 2150, old: 2800, rating: 4.6, sold: 130, emoji: '🧥' },
+    { id: 7, name: 'Running Shoes', cat: 'Fashion', price: 2950, old: 3600, rating: 4.9, sold: 260, emoji: '👟' },
+    { id: 8, name: 'Sunglasses', cat: 'Fashion', price: 850, old: 1200, rating: 4.3, sold: 410, emoji: '🕶️' },
+    { id: 9, name: 'Basmati Rice 5kg', cat: 'Grocery', price: 720, old: 850, rating: 4.8, sold: 1200, emoji: '🍚' },
+    { id: 10, name: 'Organic Honey 500g', cat: 'Grocery', price: 480, old: 600, rating: 4.9, sold: 760, emoji: '🍯' },
+    { id: 11, name: 'Green Tea 100 bags', cat: 'Grocery', price: 350, old: 450, rating: 4.5, sold: 980, emoji: '🍵' },
+    { id: 12, name: 'Backpack 25L', cat: 'Fashion', price: 1650, old: 2100, rating: 4.7, sold: 340, emoji: '🎒' }
+  ];
+  const CATS = ['All', 'Electronics', 'Fashion', 'Grocery'];
+  let activeCat = 'All';
+  let cart = load('shopcart-cart', {});
+  let wishlist = load('shopcart-wish', []);
+  let promoPct = 0;
+
+  function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  const fmt = n => '৳' + n.toLocaleString('en-IN');
+
+  document.getElementById('catChips').innerHTML = CATS.map(c =>
+    `<button class="chip ${c === 'All' ? 'active' : ''}" onclick="setCat('${c}', this)">${c}</button>`).join('');
+  function setCat(c, btn) {
+    activeCat = c;
+    document.querySelectorAll('#catChips .chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); render();
+  }
+  function toggleWish(id, btn) {
+    if (wishlist.includes(id)) wishlist = wishlist.filter(x => x !== id);
+    else wishlist.push(id);
+    save('shopcart-wish', wishlist); render();
+  }
+  function addToCart(id) {
+    cart[id] = (cart[id] || 0) + 1;
+    save('shopcart-cart', cart); renderCart(); openCart();
+  }
+  function changeQty(id, d) {
+    cart[id] = (cart[id] || 0) + d;
+    if (cart[id] <= 0) delete cart[id];
+    save('shopcart-cart', cart); renderCart(); render();
+  }
+  function cartTotals() {
+    let sub = 0, count = 0;
+    for (const [id, q] of Object.entries(cart)) {
+      const p = PRODUCTS.find(x => x.id == id);
+      if (p) { sub += p.price * q; count += q; }
+    }
+    const disc = Math.round(sub * promoPct / 100);
+    const delivery = sub === 0 ? 0 : (sub - disc >= 1000 ? 0 : 60);
+    return { sub, disc, delivery, total: sub - disc + delivery, count };
+  }
+  function applyPromo() {
+    const code = document.getElementById('promo').value.trim().toUpperCase();
+    const msg = document.getElementById('promoMsg');
+    if (code === 'NAFIZ10') { promoPct = 10; msg.innerHTML = '<span class="free">✅ Promo applied — 10% off!</span>'; }
+    else { promoPct = 0; msg.innerHTML = '<span style="color:#f87171">❌ Invalid promo code.</span>'; }
+    renderCart();
+  }
+  function render() {
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    const sort = document.getElementById('sort').value;
+    const wishOnly = document.getElementById('wishOnly').checked;
+    let list = PRODUCTS.filter(p =>
+      (activeCat === 'All' || p.cat === activeCat) &&
+      (!q || p.name.toLowerCase().includes(q)) &&
+      (!wishOnly || wishlist.includes(p.id)));
+    if (sort === 'low') list.sort((a, b) => a.price - b.price);
+    if (sort === 'high') list.sort((a, b) => b.price - a.price);
+    if (sort === 'rating') list.sort((a, b) => b.rating - a.rating);
+    if (sort === 'popular') list.sort((a, b) => b.sold - a.sold);
+    document.getElementById('resultCount').textContent = list.length + ' product(s)';
+    document.getElementById('grid').innerHTML = list.length ? list.map(p => `
+      <div class="card">
+        <button class="wish ${wishlist.includes(p.id) ? 'on' : ''}" onclick="toggleWish(${p.id})" title="Wishlist">❤️</button>
+        <div class="emoji">${p.emoji}</div>
+        <h3>${p.name}</h3>
+        <div class="cat">${p.cat} · ${p.sold} sold</div>
+        <div class="price">${fmt(p.price)}<s>${fmt(p.old)}</s></div>
+        <div class="rating">★ ${p.rating}</div>
+        <button class="addbtn" onclick="addToCart(${p.id})">Add to Cart</button>
+      </div>`).join('') : '<div class="empty">No products found. Try another search.</div>';
+    document.getElementById('cartCount').textContent = cartTotals().count;
+  }
+  function renderCart() {
+    const box = document.getElementById('cartItems');
+    const entries = Object.entries(cart);
+    box.innerHTML = entries.length ? entries.map(([id, q]) => {
+      const p = PRODUCTS.find(x => x.id == id);
+      return `<div class="citem"><div class="e">${p.emoji}</div>
+        <div class="info"><div class="n">${p.name}</div><div class="p">${fmt(p.price)} × ${q} = ${fmt(p.price * q)}</div></div>
+        <div class="qty"><button onclick="changeQty(${p.id},-1)">−</button><span>${q}</span><button onclick="changeQty(${p.id},1)">+</button></div></div>`;
+    }).join('') : '<p style="color:#a78bfa;padding:16px 0">Your cart is empty.</p>';
+    const t = cartTotals();
+    document.getElementById('subTotal').textContent = fmt(t.sub);
+    document.getElementById('discount').textContent = '−' + fmt(t.disc);
+    document.getElementById('delivery').innerHTML = t.delivery === 0 && t.sub > 0 ? '<span class="free">FREE</span>' : fmt(t.delivery);
+    document.getElementById('grandTotal').textContent = fmt(t.total);
+    document.getElementById('cartCount').textContent = t.count;
+  }
+  function openCart() {
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('cartView').style.display = 'block';
+    document.getElementById('checkoutView').style.display = 'none';
+    document.getElementById('successView').style.display = 'none';
+    renderCart();
+  }
+  function closeCart() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+  function showCheckout() {
+    if (cartTotals().count === 0) { alert('Your cart is empty.'); return; }
+    document.getElementById('cartView').style.display = 'none';
+    document.getElementById('checkoutView').style.display = 'block';
+  }
+  function backToCart() {
+    document.getElementById('checkoutView').style.display = 'none';
+    document.getElementById('cartView').style.display = 'block';
+  }
+  function placeOrder() {
+    const name = document.getElementById('coName').value.trim();
+    const phone = document.getElementById('coPhone').value.trim();
+    const addr = document.getElementById('coAddress').value.trim();
+    if (!name || !phone || !addr) { alert('Please fill in name, phone and address.'); return; }
+    const t = cartTotals();
+    const oid = 'SC-' + Math.floor(100000 + Math.random() * 900000);
+    document.getElementById('orderInfo').innerHTML =
+      `Order ID: <b>${oid}</b><br>${t.count} item(s) · Total <b>${fmt(t.total)}</b><br>Payment: ${document.getElementById('coPay').value}<br>Deliver to: ${addr.replace(/</g, '&lt;')}`;
+    cart = {}; promoPct = 0; save('shopcart-cart', cart);
+    document.getElementById('checkoutView').style.display = 'none';
+    document.getElementById('successView').style.display = 'block';
+    render();
+  }
+  render();
+</script>
+</body>
+</html>
